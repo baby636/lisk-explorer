@@ -55,7 +55,7 @@ config.cacheTTL = 20;
 // Collect logs (true - enabled, false - disabled)
 config.log.enabled = true;
 // Output for logs - can be device file or ordinary path
-config.log.file = './logs/explorer.log';
+config.log.output = ['/dev/stdout', './logs/explorer.log'];
 // Log level - (trace, debug, info, warn, error)
 config.log.level = 'info';
 
@@ -108,5 +108,10 @@ config.marketWatcher.orders.updateInterval = 15000;
 config.cacheDelegateAddress.enabled = true;
 // Interval in ms for checking new delegates registration (default: 60 seconds)
 config.cacheDelegateAddress.updateInterval = 60000;
+
+/*
+ * Known accounts can be loaded from the url below
+ */
+config.knownAccountsUrl = 'https://static-data.lisk.io';
 
 module.exports = config;
