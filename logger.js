@@ -17,7 +17,7 @@ const safeStringify = require('fast-safe-stringify');
 const fs = require('fs');
 const flatstr = require('flatstr');
 const newConsole = require('console').Console;
-const config = require('../config');
+const config = require('./config.js');
 
 const defaultOutput = '/dev/stdout';
 

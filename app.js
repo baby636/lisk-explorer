@@ -14,51 +14,20 @@
  *
  */
 const express = require('express');
-let config = require('./config');
-const routes = require('./api');
+const proxy = require('http-proxy-middleware');
+const request = require('request-promise');
 const path = require('path');
-const cache = require('./cache');
-const program = require('commander');
-const async = require('async');
+const compression = require('compression');
+const methodOverride = require('method-override');
+
 const packageJson = require('./package.json');
-const split = require('split');
-const logger = require('./utils/logger');
-const request = require('request');
+const logger = require('./logger.js');
+const config = require('./config.js');
 
 const app = express();
-const utils = require('./utils');
-
-program
-	.version(packageJson.version)
-	.option('-c, --config <path>', 'config file path')
-	.option('-p, --port <port>', 'listening port number')
-	.option('-h, --host <ip>', 'listening host name or ip')
-	.option('-rp, --redisPort <port>', 'redis port')
-	.parse(process.argv);
-
-if (program.config) {
-	// eslint-disable-next-line import/no-dynamic-require
-	config = require(path.resolve(process.cwd(), program.config));
-}
-app.set('host', program.host || config.host);
-app.set('port', program.port || config.port);
-
-if (program.redisPort) {
-	config.redis.port = program.redisPort;
-}
-const client = require('./redis')(config);
-
-app.candles = new utils.candles(config, client);
-app.exchange = new utils.exchange(config);
-app.knownAddresses = new utils.knownAddresses(app, config, client);
-app.orders = new utils.orders(config, client);
 
 app.set('version', packageJson.version);
-app.set('strict routing', true);
-app.set('lisk address', `http://${config.lisk.host}:${config.lisk.port}${config.lisk.apiPath}`);
-app.set('freegeoip address', `http://${config.freegeoip.host}:${config.freegeoip.port}`);
-app.set('exchange enabled', config.exchangeRates.enabled);
-app.set('uiMessage', config.uiMessage);
+// app.set('strict routing', true);
 
 app.use((req, res, next) => {
 	res.setHeader('X-Frame-Options', 'DENY');
@@ -82,173 +51,55 @@ app.use((req, res, next) => {
 	return next();
 });
 
-app.use(express.static(path.join(__dirname, 'public')));
+const serverHealthCheck = async () => {
+	try {
+		const res = await request(`${config.apiUrl}/api/status`);
+		const version = JSON.parse(res).version;
+		logger.info(`Connected to ${config.apiUrl}, Lisk Service version ${version}`);
+	} catch (err) {
+		logger.info(`The ${config.apiUrl} is unavailable or is not a proper Lisk Service endpoint.\nConsider setting SERVICE_ENDPOINT="https://service.lisk.io"`);
+	}
+};
 
-app.locals.redis = client;
-app.use((req, res, next) => {
-	req.redis = client;
-	return next();
+serverHealthCheck();
+
+app.get('/api/ui_message', (req, res) => {
+	const msg = config.uiMessage;
+	const now = new Date();
+
+	if (msg && msg.text) {
+		const start = msg.start ? new Date(msg.start) : null;
+		const end = msg.end ? new Date(msg.end) : null;
+		if ((!start || (now >= start)) && (!end || (now < end))) {
+			return res.json({ success: true, content: msg.text });
+		}
+	}
+
+	return res.json({ success: false, error: 'There is no info message to send' });
 });
 
-const morgan = require('morgan');
+const defaultProxyConfig = {
+	logLevel: config.log.level || 'debug',
+	target: config.apiUrl,
+};
 
-app.use(morgan('combined', {
-	skip(req, res) {
-		return parseInt(res.statusCode, 10) < 400;
-	},
-	stream: split().on('data', (data) => {
-		logger.error(data);
-	}),
-}));
-app.use(morgan('combined', {
-	skip(req, res) {
-		return parseInt(res.statusCode, 10) >= 400;
-	},
-	stream: split().on('data', (data) => {
-		logger.info(data);
-	}),
-}));
-const compression = require('compression');
+// HTTP proxy
+app.use('/api', proxy(Object.assign({}, defaultProxyConfig, {
+	changeOrigin: true,
+})));
 
+// WebSocket proxy
+const wsProxy = proxy(Object.assign({}, defaultProxyConfig, {
+	changeOrigin: true,
+	ws: true,
+}));
+app.use('/socket.io', wsProxy);
+
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(compression());
-const methodOverride = require('method-override');
-
 app.use(methodOverride('X-HTTP-Method-Override'));
 
-const bodyParser = require('body-parser');
+app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({
-	extended: true,
-}));
-
-const allowCrossDomain = function (req, res, next) {
-	res.header('Access-Control-Allow-Origin', '*');
-	res.header('Access-Control-Allow-Methods', 'GET');
-	res.header('Access-Control-Allow-Headers', 'Content-Type');
-	next();
-};
-app.use(allowCrossDomain);
-
-app.use((req, res, next) => {
-	logger.info(req.originalUrl);
-
-	try {
-		decodeURIComponent(req.path);
-	} catch (err) {
-		logger.info(err);
-		return res.redirect('/');
-	}
-
-	if (req.originalUrl === undefined || req.originalUrl.split('/')[1] !== 'api') {
-		return next();
-	}
-
-	if (cache.cacheIgnoreList.indexOf(req.originalUrl) >= 0) {
-		return next();
-	}
-
-	return req.redis.get(req.originalUrl, (err, json) => {
-		if (err) {
-			logger.info(err);
-			return next();
-		} else if (json) {
-			try {
-				json = JSON.parse(json);
-			} catch (e) {
-				return next();
-			}
-
-			return res.json(json);
-		}
-		return next();
-	});
-});
-
-logger.info('Loading routes...');
-
-routes(app);
-
-logger.info('Routes loaded');
-
-app.use((req, res, next) => {
-	logger.info(req.originalUrl);
-
-	if (req.originalUrl === undefined || req.originalUrl.split('/')[1] !== 'api' || !req.json) {
-		return next();
-	}
-
-	if (cache.cacheIgnoreList.indexOf(req.originalUrl) >= 0) {
-		return res.json(req.json);
-	}
-
-	const ttl = cache.cacheTTLOverride[req.originalUrl] || config.cacheTTL;
-
-	req.redis.setex(req.originalUrl, ttl, JSON.stringify(req.json), (err) => {
-		if (err) {
-			logger.info(err);
-		}
-	});
-
-	return res.json(req.json);
-});
-
-app.get('*', (req, res, next) => {
-	if (req.url.indexOf('api') !== 1) {
-		return res.sendFile(path.join(__dirname, 'public', 'index.html'));
-	}
-	return next();
-});
-
-const getNodeConstants = () => new Promise((success, error) => {
-	request.get({
-		url: `${app.get('lisk address')}/node/constants`,
-		json: true,
-	}, (err, response, body) => {
-		if (err) {
-			return error({ success: false, error: err.message });
-		} else if (response.statusCode === 200) {
-			if (body && body.data) {
-				app.set('nodeConstants', body.data);
-				return success({ success: true, version: body.data.version });
-			}
-		}
-		return error({ success: false, error: body.error });
-	});
-});
-
-const SERVER_FAILURE_TIMEOUT = 5000; // ms
-const status = { NOT_RUNNING: 0, OK: 1 };
-let serverStatus = status.NOT_RUNNING;
-
-const startServer = (cb) => {
-	getNodeConstants().then((result) => {
-		logger.info(`Connected to the node ${app.get('lisk address')}, Lisk Core version ${result.version}`);
-		const server = app.listen(app.get('port'), app.get('host'), (err) => {
-			if (err) {
-				logger.info(err);
-			} else {
-				logger.info(`Lisk Explorer started at ${app.get('host')}:${app.get('port')}`);
-
-				const io = require('socket.io').listen(server);
-				require('./sockets')(app, io);
-				app.knownAddresses.load();
-				serverStatus = status.OK;
-			}
-		});
-	}).catch(() => {
-		logger.error(`The following node ${app.get('lisk address')} has an incompatible API or is not available.`);
-		setTimeout(cb, SERVER_FAILURE_TIMEOUT);
-	});
-};
-
-const loadRates = (cb) => {
-	app.exchange.loadRates();
-	cb(null);
-};
-
-async.parallel([
-	loadRates,
-], () => {
-	async.until(() => (serverStatus === status.OK), startServer);
-});
+const server = app.listen(config.port, config.host);
+server.on('upgrade', wsProxy.upgrade);

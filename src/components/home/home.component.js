@@ -16,7 +16,7 @@
 import AppHome from './home.module';
 import template from './home.html';
 
-const HomeConstructor = function ($scope, $http, $interval) {
+const HomeConstructor = function ($rootScope, $http, $interval) {
 	const vm = this;
 
 	const setHref = (tx) => {
@@ -26,7 +26,7 @@ const HomeConstructor = function ($scope, $http, $interval) {
 
 	// Blocks
 	vm.getLastBlocks = () => {
-		$http.get('/api/getLastBlocks').then((resp) => {
+		$http.get(`${$rootScope.apiBaseUrl}/getLastBlocks`).then((resp) => {
 			if (resp.data.success && Array.isArray(resp.data.blocks)) {
 				resp.data.blocks.sort((a, b) => b.height > a.height);
 				vm.lastBlock = resp.data.blocks.slice(0, 1)[0];
@@ -41,7 +41,7 @@ const HomeConstructor = function ($scope, $http, $interval) {
 
 	// Transactions
 	vm.getLastTransactions = () => {
-		$http.get('/api/getLastTransactions').then((resp) => {
+		$http.get(`${$rootScope.apiBaseUrl}/getLastTransactions`).then((resp) => {
 			if (resp.data.success) {
 				vm.txs = resp.data.transactions.splice(0, 10);
 				vm.txs.map(setHref);
