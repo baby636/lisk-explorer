@@ -244,6 +244,7 @@ It's highly recommended to run the tests using Docker. It makes it much easier t
 ```
 docker-compose up -d
 bash docker-test-setup.sh
+npm run test:e2e:install
 ```
 
 ### Run end-to-end test suite:

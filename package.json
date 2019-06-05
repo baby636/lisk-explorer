@@ -27,6 +27,7 @@
     "start": "npm run build && node app.js",
     "test": "npm run test:e2e",
     "test:e2e": "protractor protractor.conf.js",
+    "test:e2e:install": "./node_modules/protractor/bin/webdriver-manager update --standalone false --gecko false",
     "eslint": "eslint ./src ./features ./*.js ./*.json",
     "eslint-fix": "eslint --fix ./src ./features ./*.js",
     "watch": "npm run build:copy-files && DEBUG=true webpack -w",
@@ -35,9 +36,7 @@
     "build:prod": "webpack --env.prod",
     "build:copy-files": "cp -r ./src/assets/img/favicons/* ./src/assets/img/leaflet ./robots.txt ./public",
     "clean": " npm run clean-frontend && git clean ./ -dfnx",
-    "clean:frontend": "git clean ./public -dfx && git clean ./src -dfx",
-    "postinstall": "npm run postinstall:e2e",
-    "postinstall:e2e": "./node_modules/protractor/bin/webdriver-manager update --standalone false --gecko false"
+    "clean:frontend": "git clean ./public -dfx && git clean ./src -dfx"
   },
   "dependencies": {
     "amstock3": "github:amcharts/amstock3",
