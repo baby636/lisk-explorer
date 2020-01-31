@@ -20,8 +20,8 @@
   "license": "GPL-3.0",
   "main": "app.js",
   "engines": {
-    "node": "8.11.2",
-    "npm": "6.1.0"
+    "node": "10.18.1",
+    "npm": "6.13.4"
   },
   "scripts": {
     "start": "npm run build && node app.js",
@@ -40,14 +40,14 @@
   },
   "dependencies": {
     "amstock3": "github:amcharts/amstock3",
-    "angular": "<=1.6.10",
-    "angular-animate": "~1.6.4",
-    "angular-cookies": "~1.6.10",
+    "angular": "^1.7.9",
+    "angular-animate": "^1.7.9",
+    "angular-cookies": "^1.7.9",
     "angular-gettext": "^2.3.9",
     "angular-naturalsort": "https://github.com/isabello/angular-naturalsort.git",
     "angular-qrcode": "^7.2.0",
-    "angular-resource": "~1.6.4",
-    "angular-sanitize": "~1.6.10",
+    "angular-resource": "^1.7.9",
+    "angular-sanitize": "^1.7.9",
     "angular-ui-bootstrap": "^2.5.0",
     "angular-ui-router": "=1.0.0-rc.1",
     "bootstrap": "^3.3.7",
