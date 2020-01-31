@@ -1,26 +1,35 @@
 @Library('lisk-jenkins') _
 
+def waitForHttp(url) {
+	timeout(1) {
+		waitUntil {
+			script {
+				def api_available = sh script: "cd docker/jenkins && make http_status", returnStatus: true
+				return (api_available == 0)
+			}
+		}
+	}
+}
+
 pipeline {
 	agent { node { label 'lisk-explorer' } }
 	stages {
-		stage ('Build dependencies') {
+
+		stage('Build docker image') {
 			steps {
-				nvm(getNodejsVersion()) {
-					sh 'npm ci'
-				}
+				sh '''
+				docker build --tag=lisk/explorer ./
+				'''
 			}
 		}
-		stage ('Run ESLint') {
+		stage('Start the application') {
 			steps {
-				nvm(getNodejsVersion()) {
-					sh 'npm run eslint'
-				}
+				sh 'cd docker/jenkins && make coldstart'
 			}
-		}
-		stage ('Build bundles') {
-			steps {
-				nvm(getNodejsVersion()) {
-					sh 'npm run build'
+			post {
+				failure {
+					sh 'cd docker/jenkins && make logs'
+					sh 'cd docker/jenkins && make mrproper'
 				}
 			}
 		}
@@ -60,3 +69,4 @@ pipeline {
 		}
 	}
 }
+// vim: filetype=groovy

@@ -7,7 +7,6 @@ services:
       - "127.0.0.1:6040:6040"
     networks:
       - lisk-explorer
-      - localhost
     restart: on-failure
     environment:
       - SERVICE_ENDPOINT=https://service:9901

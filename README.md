@@ -53,24 +53,27 @@ These programs and resources are required to install and run Lisk Explorer
   
 - PM2-logrotate (https://github.com/pm2-hive/pm2-logrotate) -- Manages PM2 logs
 
-  ```
-  pm2 install pm2-logrotate
-  pm2 set pm2-logrotate:max_size 100M
-  ```
+- [Block browser](https://explorer.lisk.io/blocks/)
+  - Shows blocks with their details stored in the blockchain
 
-- Git (<https://github.com/git/git>) -- Used for cloning and updating Lisk Explorer
+- [Account browser](https://explorer.lisk.io/address/6307579970857064486L)
+  - Supports various account types
+  - Allows advanced transaction filtering on per-account basis
 
-  ```
-  sudo apt-get install -y git
-  ```
+- [Delegate monitor](https://explorer.lisk.io/delegateMonitor)
+  - Shows information about all register delegate accounts
+  - Live status of the 101 active delegates
 
-- Set appropriate permissions.
+- [Network monitor](https://explorer.lisk.io/networkMonitor)
+  - Shows live information about all nodes
+  - Shows active and disconnected nodes
+  - Public IPs are shown with domain names and geographical location
 
   ```
   sudo apt-get install -y python build-essential automake autoconf libtool
   ```
 
-## Installation Steps
+## Installation
 
 Clone the Lisk Explorer Repository:
 
@@ -144,7 +147,7 @@ To stop Explorer after it has been started with `PM2`, issue the following comma
 pm2 stop lisk-explorer
 ```
 
-## Docker
+In order to install Docker, refer to the official [Docker Installation Instruction](https://docs.docker.com/install/).
 
 #### Starting application
 
@@ -173,9 +176,9 @@ The following command will remove all containers defined by the `docker-compose.
 docker-compose down --volumes
 ```
 
-The parameter `--volumes` will remove all associated volumes that would not be useful anyway - next instances after `docker-compose up` create new volumes so the data will not be reused.
+For further information about managing and configuring Lisk Explorer, see [Run With Docker](/docs/run_with_docker.md).
 
-The example above will stop whole application gracefully but it leaves images in your repository. It is useful only if you plan to run the solution again. Otherwise you may want to clean up after these containers. You can use additional param for this purpose: `--rmi local` to remove untagged images. In case you want to remove all images related to this application add `--rmi all` to the `docker-compose` command.
+### Installation From Source
 
 ### Using docker-compose
 
@@ -200,7 +203,7 @@ If you want to build other versions, you have to change the tag name in `docker-
 
 You can also run Lisk Explorer over different version of Lisk Service or Lisk Core. In order to do that just change the tag name `image:` under the section called `lisk-service:` or `lisk-core:` in `docker-compose.yml`.
 
-### Manual Docker deployment
+There are functional backend and end-to-end tests available.
 
 First, build a new docker image in your local repository.
 Replace `<TAG_NAME>` with the branch or tag name ex. `3.0.0`.
@@ -265,13 +268,13 @@ https://github.com/LiskHQ/lisk-explorer/graphs/contributors
 
 ## License
 
-Copyright © 2016-2017 Lisk Foundation
+Copyright © 2016-2019 Lisk Foundation
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
-You should have received a copy of the [GNU General Public License](https://github.com/LiskHQ/lisk-explorer/tree/master/LICENSE) along with this program.  If not, see <http://www.gnu.org/licenses/>.
+You should have received a copy of the [GNU General Public License](./LICENSE) along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ***
 
