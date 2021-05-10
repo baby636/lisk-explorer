@@ -135,7 +135,7 @@
     "protractor": "^5.4.2",
     "protractor-cucumber-framework": "=3.1.2",
     "should": "^11.2.1",
-    "sinon": "^5.0.10",
+    "sinon": "^10.0.1",
     "sinon-chai": "^2.13.0",
     "sinon-stub-promise": "^4.0.0",
     "style-loader": "^0.16.1",
