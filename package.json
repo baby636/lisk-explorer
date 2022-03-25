@@ -40,7 +40,9 @@
     "build:prod": "webpack --env.prod",
     "clean": "npm run clean:backend && npm run clean:frontend && git clean ./ -dfnx",
     "clean:frontend": "git clean ./public -dfx && git clean ./src -dfx",
-    "clean:backend": "rm -rf node_modules"
+    "clean:backend": "rm -rf node_modules",
+    "prepublish": "npm run snyk-protect",
+    "snyk-protect": "snyk-protect"
   },
   "dependencies": {
     "amstock3": "github:amcharts/amstock3",
@@ -88,7 +90,8 @@
     "string-similarity": "^1.2.0",
     "try-require": "^1.2.1",
     "twitter": "^1.7.1",
-    "underscore": "^1.8.3"
+    "underscore": "^1.8.3",
+    "@snyk/protect": "latest"
   },
   "devDependencies": {
     "@fortawesome/fontawesome-free": "^5.5.0",
@@ -144,5 +147,6 @@
     "webpack-bundle-analyzer": "^3.3.2",
     "webpack-dev-server": "^3.4.0",
     "webpack-merge": "^4.1.2"
-  }
+  },
+  "snyk": true
 }
