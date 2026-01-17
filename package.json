@@ -99,7 +99,7 @@
     "babel-preset-env": "~1.7.0",
     "babel-preset-stage-3": "^6.24.1",
     "chai": "=3.5.0",
-    "chai-as-promised": "=7.0.0",
+    "chai-as-promised": "7.1.1",
     "chai-enzyme": "^0.8.0",
     "clean-webpack-plugin": "^0.1.16",
     "css-loader": "^0.28.11",
